@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Time Pro - Professional Independent Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/ds-digital" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#B2DFDB">
+
+    <style>
+        :root {
+            --mint-main: #4DB6AC;
+            --mint-light: #80CBC4;
+            --mint-dark: #00897B;
+            --bg-color: #B2DFDB;
+            --lcd-bg: #c4dbd8;
+            --text-standard: #004D40;
+            --label-tc: #9A8D00;
+            --accent-red: #D32F2F;
+        }
+        .label-tc {
+    color: #C9A227;
+}
+
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; position: fixed;
+touch-action: manipulation;
+        }
+
+        body { 
+            
+            color: #333; font-family: 'Inter', sans-serif; 
+            display: flex; align-items: center; justify-content: center; 
+            user-select: none; -webkit-user-select: none;
+            overscroll-behavior: none; 
+            -webkit-tap-highlight-color: transparent;
+            
+        }
+/* 🍏 これが新しく敷くグラデーション座布団だよ！ */
+        #bg-board {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(135deg, #B2DFDB 0%, #B2DFDB 30%, #E0F2F1 50%, #B2DFDB 70%, #B2DFDB 100%);
+            z-index: -1;
+        }
+
+        .console { width: 480px; box-sizing: border-box; padding: 25px; display: flex; flex-direction: column; gap: 25px; transition: opacity 0.2s; transform-origin: center center; }
+        .top-row { display: grid; grid-template-columns: 80px 1fr 100px; align-items: flex-end; gap: 18px; }
+        
+        #mode-selector { 
+            width: 80px; height: 80px; 
+            background: linear-gradient(145deg, #80CBC4, #4DB6AC); 
+            border-radius: 50%; border: 3px solid #00796B; 
+            position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            display: flex; align-items: center; justify-content: center;
+            z-index: 110; transition: background 0.2s, border-color 0.2s;
+        }
+
+        #mode-selector.large-dark-lever {
+            background: #222222 !important;
+            border-color: #444444 !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+         #mode-selector.large-dark-lever #lever-knob {
+    background: linear-gradient(to right, #555, #333, #555) !important;
+         }
+        #mode-selector.large-dark-lever #lever-knob::after {
+    background: radial-gradient(circle, #555555 0%, #333333 100%) !important;
+    border-color: #707070 !important;
+        }
+        
+        
+        #lever-knob { 
+            width: 10px; height: 60px; 
+            background: linear-gradient(to right, #f0f0f0, #bbb, #f0f0f0); 
+            border-radius: 5px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); 
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            transform-origin: center center;
+            position: relative;
+        }
+
+        #lever-knob::after {
+            content: ''; position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 20px; height: 20px;
+            background: radial-gradient(circle, #f0f0f0 0%, #bbb 100%);
+            border-radius: 50%; border: 2px solid #999;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        #reset-btn { height: 45px; background: linear-gradient(to bottom, #26A69A, #00897B); border: none; border-radius: 12px; color: white; font-size: 0.9rem; font-weight: bold; box-shadow: 0 4px #004D40; cursor: pointer; }
+        #reset-btn:active { transform: translateY(2px); box-shadow: 0 2px #004D40; }
+        
+        #start-stop-btn { height: 95px; background: linear-gradient(to bottom, #26A69A, #009688); border: none; border-radius: 20px; color: white; font-size: 1rem; font-weight: bold; box-shadow: 0 6px #00796B; cursor: pointer; }
+        #start-stop-btn:active { transform: translateY(4px); box-shadow: 0 2px #00796B; }
+
+        #display-panel { 
+            background-color: var(--lcd-bg); padding: 20px 25px; border-radius: 25px; 
+            border: 10px solid #75bdb3; 
+            box-shadow: inset 10px 10px 20px rgba(0,0,0,0.3), inset -5px -5px 15px rgba(255,255,255,0.4); 
+            min-height: 200px; display: flex; flex-direction: column; position: relative; overflow: hidden;
+            transition: transform 0.05s ease-out, box-shadow 0.05s ease-out;
+        }
+        #display-panel:active {
+            transform: scale(0.98);
+            box-shadow: inset 15px 15px 25px rgba(0,0,0,0.4), inset -2px -2px 10px rgba(255,255,255,0.2);
+        }
+        .active-lcd { cursor: pointer !important; border-color: #4DB6AC !important; }
+
+        #upper-display-area { height: 60px; margin-bottom: 10px; display: flex; flex-direction: column; justify-content: center; pointer-events: none; }
+        .info-row { display: flex; align-items: baseline; gap: 15px; transition: opacity 0.2s ease; }
+        .label { font-size: 1.1rem; font-weight: 800; letter-spacing: 1.5px; width: 105px; }
+        .time-val { color: var(--text-standard); font-size: 2.6rem; font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: 1px; }
+        
+        .divider { border: none; border-top: 1px solid rgba(0, 77, 64, 0.15); margin: 5px 0 10px; width: 100%; pointer-events: none; }
+
+        #mode-indicator { position: absolute; bottom: 15px; left: 18px; color: #00796B; font-size: 0.8rem; font-weight: bold; opacity: 0.6; }
+        #op-sign { color: #00796B; font-size: 1.8rem; position: absolute; bottom: 12px; right: 20px; font-weight: bold; }
+        #main-time { color: var(--text-standard); font-size: 4.2rem; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: 2px; text-align: right; margin-top: auto; }
+
+      .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: 16px;   /* 横 */
+    row-gap: 24px;      /* 縦 */
+    width: 100%;
+}
+        
+        .calc-btn { 
+            height: 68px; font-size: 2.1rem; font-weight: bold; color: #fff; cursor: pointer; 
+            background: linear-gradient(to bottom, #80CBC4 0%, #4DB6AC 100%); 
+            border: none; box-shadow: 0 8px #00897B, inset 0 2px 4px rgba(255,255,255,0.4); 
+            border-radius: 40px; position: relative; transition: all 0.05s;
+            display: flex; align-items: center; justify-content: center; touch-action: manipulation;
+        }
+        .calc-btn:active { transform: translateY(6px) !important; box-shadow: 0 2px #00897B, inset 0 2px 4px rgba(255,255,255,0.4) !important; }
+        
+        .rect { border-radius: 20px; font-size: 1.5rem; }
+        .ac-btn { background: linear-gradient(to bottom, #FFAB91 0%, #EF9A9A 100%) !important; box-shadow: 0 8px #E57373, inset 0 2px 4px rgba(255,255,255,0.4) !important; }
+        .eq-btn { background: linear-gradient(to bottom, #26A69A 0%, #00897B 100%) !important; box-shadow: 0 8px #004D40, inset 0 2px 4px rgba(255,255,255,0.3) !important; }
+        
+        .clock-icon { width: 28px; height: 28px; border: 2.5px solid white; border-radius: 50%; position: relative; }
+        .clock-icon::before, .clock-icon::after { content: ''; position: absolute; background: white; border-radius: 2px; left: 50%; bottom: 50%; transform-origin: bottom center; }
+        .clock-icon::before { width: 2.5px; height: 9px; transform: rotate(-45deg); }
+        .clock-icon::after { width: 2px; height: 11px; transform: rotate(45deg); }
+
+        .hidden { display: none !important; }
+        .running-text { color: var(--accent-red) !important; }
+
+        /* 巨大画面モード専用のスタイル */
+        #large-sw-overlay {
+            position: fixed; top: -2px; 
+    left: -2px; width: 100%; height: 100%;
+            background-color: #000000; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-sizing: border-box; cursor: pointer; transition: background-color 0.08s ease;
+touch-action: manipulation;
+            padding-bottom: 50px;
+        }
+       
+#large-main-time.active-press {
+    transform: scale(0.98); 
+border-color: #ffffff;
+     box-shadow: 0 0 16px rgba(255, 255, 255, 0.8), 
+                0 0 28px rgba(255, 255, 255, 0.5), 
+                0 0 46px rgba(255, 255, 255, 0.3);
+}
+     
+
+       #large-time-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg); 
+    transform-origin: center center;
+    white-space: nowrap; 
+    transition: transform 0.06s ease-out;
+}
+        #large-main-time {
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11rem; font-family: 'DS-Digital', monospace;
+            color: #FFFFFF;
+border: 4px solid #FFFFFF;      /* 白い枠線 */
+    border-radius: 20px;            /* 角を丸く */
+    padding: 35px 55px;             /* 枠と数字の間の余白 */
+    background: rgba(255, 255, 255, 0.05);
+
+        }
+        .digit {
+    width: 80px;
+    text-align: right;
+    display: inline-block;
+    margin: 0 8px;
+   font-style: italic;
+color: #ff4500;
+}
+        .separator { width: 45px; text-align: right; display: inline-block; font-size: 0.8em; font-weight: bold; color: #ff0000;
+padding-left: 6px;
+/* 2秒かけて、パッ、パッ、と切り替える */
+    
+animation: none;
+}
+
+@keyframes blink {
+    0%   { color: #ff3333; } /* 点灯 */
+    50%  { color: #bb2222; } /* ほぼ消灯（完全な黒にすると違和感があるかもしれないから、少しだけ赤みを残してるよ） */
+    100% { color: #ff3333; } /* 点灯 */
+}
+
+}
+
+        #large-mode-title {
+            font-size: 1.1rem; font-weight: 800; color: #FFFFFF; opacity: 0.6;
+            letter-spacing: 4px; text-align: center; margin-bottom: 20px;
+        }
+#large-sub-label {
+           margin-top: 15px;      /* 枠との間隔を少し調整 */
+    color: #FFFFFF;
+    font-size: 1.2rem;
+    font-weight: bold;
+font-size: 2.2rem;
+    letter-spacing: 2px;
+    text-align: center;
+    opacity: 0.8;
+    width: 100%;           /* 幅を確保してセンター寄せを確実にする */
+}
+        #large-reset-btn {
+            position: absolute; bottom: 25px; right: 25px; width: 70px; height: 35px; background: rgba(255, 255, 255, 0.1);
+            border: 1.5px solid #707070; border-radius: 8px; color: #888888; font-size: 0.75rem; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; z-index: 110; cursor: pointer;
+            transition: transform 0.05s, background-color 0.05s;
+        }
+        .large-lever-positioner { position: absolute; top: 25px; left: 25px; width: 80px; height: 80px; z-index: 120; }
+    </style>
+</head>
+<body>
+<div id="bg-board"></div>
+    <div class="large-lever-positioner"><div id="mode-selector" onclick="cycleMode()"><div id="lever-knob"></div></div></div>
+    
+    <div class="console" id="normal-console">
+        <div class="top-row">
+            <div style="width: 80px; height: 80px; pointer-events: none;"></div>
+            <button id="reset-btn" onclick="handleReset()">RESET</button>
+            <button id="start-stop-btn" onclick="handleStartStop()">START<br>STOP</button>
+        </div>
+        <div id="display-panel" onclick="lcdTapped()">
+            <div id="upper-display-area">
+                <div id="section-clock" class="info-row"><div class="label label-clock">CLOCK</div><div id="clock-val" class="time-val">00:00'00"</div></div>
+                <div id="section-tc" class="info-row hidden"><div class="label label-tc">TIMECODE</div><div id="tc-val" class="time-val">00:00'00"</div></div>
+            </div>
+            <hr id="lcd-divider" class="divider">
+            <div id="mode-indicator">CALC</div>
+            <div id="op-sign"></div>
+            <div id="main-time">0</div>
+        </div>
+        <div class="grid">
+            <button class="calc-btn rect" onclick="confirmUnit('h')">時</button>
+            <button class="calc-btn rect" onclick="confirmUnit('m')">分</button>
+            <button class="calc-btn rect" onclick="confirmUnit('s')">秒</button>
+            <button class="calc-btn rect ac-btn" onclick="allClear()">AC</button>
+            <button class="calc-btn" onclick="pressNum(7)">7</button>
+            <button class="calc-btn" onclick="pressNum(8)">8</button>
+            <button class="calc-btn" onclick="pressNum(9)">9</button>
+            <button class="blank" style="visibility:hidden"></button>
+            <button class="calc-btn" onclick="pressNum(4)">4</button>
+            <button class="calc-btn" onclick="pressNum(5)">5</button>
+            <button class="calc-btn" onclick="pressNum(6)">6</button>
+            <button class="calc-btn" onclick="selectUpperDisplay('clock')"><div class="clock-icon"></div></button>
+            <button class="calc-btn" onclick="pressNum(1)">1</button>
+            <button class="calc-btn" onclick="pressNum(2)">2</button>
+            <button class="calc-btn" onclick="pressNum(3)">3</button>
+            <button class="calc-btn" onclick="selectUpperDisplay('tc')"><span style="font-size:1.2rem;font-weight:900;">TC</span></button>
+            <button class="calc-btn" onclick="pressNum(0)">0</button>
+            <button class="calc-btn" onclick="setOp('-')">－</button>
+            <button class="calc-btn" onclick="setOp('+')">＋</button>
+            <button class="calc-btn eq-btn" onclick="calculate()">＝</button>
+        </div>
+    </div>
+
+    <div id="large-sw-overlay" class="hidden" onmousedown="largeScreenPressStart(event)" ontouchstart="largeScreenPressStart(event)">
+        <div id="large-reset-btn" onclick="largeResetTapped(event)">RESET</div>
+        <div id="large-time-container">
+            <div id="large-main-time">
+                <span class="digit">0</span><span class="digit">0</span><span class="separator">:</span>
+                <span class="digit">0</span><span class="digit">0</span><span class="separator">:</span>
+                <span class="digit">0</span><span class="digit">0</span>
+            </div>
+            
+            <div id="large-sub-label">REAL TIME / TIMER</div>
+        </div>
+
+    <script>
+        // (JS部分はそのまま維持)
+        let currentMode = 'CALC';
+        let upperView = 'clock'; 
+        let tcBaseSeconds = 0, tcElapsedMs = 0, tcRunning = false, tcStartTime = 0, tcInterval = null;
+        let swElapsedMs = 0, swRunning = false, swStartTime = 0, swInterval = null;
+        let memorySeconds = 0, currentOp = null, isDetermined = false, isWaitingNewInput = false;
+        let inputs = { 'CALC': { h: "", m: "", s: "" }, 'TC': { h: "", m: "", s: "" }, 'SW': { h: "", m: "", s: "" } };
+        
+        const lever = document.getElementById('lever-knob');
+        const modeSelector = document.getElementById('mode-selector');
+        const modeIndicator = document.getElementById('mode-indicator');
+        const mainDisplay = document.getElementById('main-time');
+        const tcDisplay = document.getElementById('tc-val');
+        const lcdPanel = document.getElementById('display-panel');
+        const normalConsole = document.getElementById('normal-console');
+        const largeOverlay = document.getElementById('large-sw-overlay');
+        const largeMainTime = document.getElementById('large-main-time');
+
+        function cycleMode() {
+            if (currentMode === 'CALC') setMode('TC');
+            else if (currentMode === 'TC') setMode('SW');
+            else if (currentMode === 'SW') setMode('LARGE');
+            else setMode('CALC');
+        }
+
+        function setMode(m) {
+            currentMode = m;
+            if (m === 'LARGE') {
+document.getElementById('bg-board').style.background = '#000000';
+document.querySelector('meta[name="theme-color"]').setAttribute('content', '#000000');
+                document.body.style.background = '#000000';
+                normalConsole.classList.add('hidden');
+                largeOverlay.classList.remove('hidden');
+                modeSelector.classList.add('large-dark-lever');
+                let swIn = inputs['SW'];
+                if (!swRunning && (swIn.h || swIn.m || swIn.s)) {
+                    swElapsedMs = getSecondsFromInput('SW') * 1000;
+                    clearModeInput('SW');
+                }
+            } else {
+document.getElementById('bg-board').style.background = '';
+document.querySelector('meta[name="theme-color"]').setAttribute('content', '#B2DFDB');
+                document.body.style.background = '';
+                normalConsole.classList.remove('hidden');
+                largeOverlay.classList.add('hidden');
+                modeSelector.classList.remove('large-dark-lever');
+            }
+
+            if (m === 'CALC') { lever.style.transform = 'rotate(-45deg)'; modeIndicator.innerText = 'CALC'; }
+            else if (m === 'TC') { lever.style.transform = 'rotate(-15deg)'; modeIndicator.innerText = 'TC SET / RUN'; }
+            else if (m === 'SW') { lever.style.transform = 'rotate(15deg)'; modeIndicator.innerText = 'STOPWATCH'; }
+            else if (m === 'LARGE') { lever.style.transform = 'rotate(45deg)'; }
+            
+            if (currentMode === 'CALC' || currentMode === 'LARGE') lcdPanel.classList.remove('active-lcd');
+            else lcdPanel.classList.add('active-lcd');
+            updateDisplay();
+        }
+
+        function handleStartStop() {
+            if (currentMode === 'TC' && !tcRunning) startTC();
+            if (currentMode === 'SW') toggleSW();
+        }
+
+        function handleReset() {
+            if (currentMode === 'TC') { stopTC(); tcBaseSeconds = 0; tcElapsedMs = 0; clearModeInput('TC'); updateDisplay(); }
+            if (currentMode === 'SW' && !swRunning) { swElapsedMs = 0; clearModeInput('SW'); updateDisplay(); }
+        }
+
+       
+
+              
+let resetTimer = null;
+
+function largeScreenPressStart(e) {
+    // リセット or レバーはそのまま
+    if (e.target.id === 'large-reset-btn' || e.target.closest('.large-lever-positioner')) {
+        resetTimer = setTimeout(() => {
+            executeLargeReset();
+        }, 400);
+        
+        const cancelReset = () => {
+            clearTimeout(resetTimer);
+            window.removeEventListener('mouseup', cancelReset);
+            window.removeEventListener('touchend', cancelReset);
+        };
+        window.addEventListener('mouseup', cancelReset);
+        window.addEventListener('touchend', cancelReset);
+        return;
+    }
+
+    // 数字枠だけ許可
+    if (!e.target.closest('#large-main-time')) return;
+
+    largeMainTime.classList.add('active-press');
+    
+    const upEvent = e.type === 'touchstart' ? 'touchend' : 'mouseup';
+    const handleRelease = () => {
+       largeMainTime.classList.remove('active-press');
+        largeScreenReleased();
+        window.removeEventListener(upEvent, handleRelease);
+    };
+    window.addEventListener(upEvent, handleRelease);
+}
+
+        
+        function largeScreenReleased() {
+            if (!swRunning) {
+                swRunning = true;
+                swStartTime = Date.now() - swElapsedMs;
+                swInterval = setInterval(() => { swElapsedMs = Date.now() - swStartTime; updateDisplay(); }, 10);
+                updateDisplay();
+            }
+        }
+
+           // 🎬 ここが新しく作った「リセットした瞬間に光を滲ませる」魔法の仕掛けだよ！
+        function executeLargeReset() {
+            if (swRunning) { swRunning = false; clearInterval(swInterval); }
+            swElapsedMs = 0;
+            updateDisplay();
+                        
+
+                            // ✨ 提案1：深みとコクのある鮮やかなミントグリーン！
+            const mintColor = '#3DBB86'; 
+
+            const digits = largeMainTime.querySelectorAll('.digit');
+            digits.forEach(d => {
+                d.style.color = mintColor;
+                
+                // 🌟 ボカシの色も、mintColorに合わせてしっかり「緑の光」に直したよ！
+                d.style.textShadow = `0 0 10px rgba(61, 187, 134, 0.6), 0 0 20px rgba(61, 187, 134, 0.3)`;
+            });
+
+
+            // 外枠の線の色も変えて、枠も一緒にほんのり光らせちゃう！
+            largeMainTime.style.borderColor = mintColor;
+            largeMainTime.style.boxShadow = `0 0 15px ${mintColor}`;
+
+            // 下の文字の色も変えるよ（id名が間違ってても動くように安全策にしてあるよ！）
+            const subText = document.getElementById('large-sub-label') || document.getElementById('large-mode-label');
+            if (subText) subText.style.color = mintColor;
+
+
+            // ⏳ 0.4秒（400ミリ秒）経ったら、いつものパキッとした画面に自動で戻すよ！
+            setTimeout(() => {
+                digits.forEach(d => {
+                    d.style.color = '#ff4500'; // いつものネオンレッドに戻す
+                    d.style.textShadow = '';   // 🌟 滲み（ボカシ）を『空っぽ』にして綺麗に消すよ！
+                });
+
+                // 枠線や下の文字も、CSSに書いてある元の状態にスッと戻します
+                largeMainTime.style.borderColor = '';
+                largeMainTime.style.boxShadow = '';
+                if (subText) subText.style.color = '';
+            }, 600); // 👈 ここの「400」を「600」とかにすると、ボカシの余韻が長くなるよ！
+        }
+
+    
+
+
+        // 誤作動を防ぐために元のタップ関数は空っぽにしておくね
+        function largeResetTapped(e) { if (e) e.stopPropagation(); }
+
+
+        function lcdTapped() { handleStartStop(); }
+
+        function startTC() {
+            let tcIn = inputs['TC'];
+            if (tcIn.h || tcIn.m || tcIn.s) { tcBaseSeconds = getSecondsFromInput('TC'); tcElapsedMs = 0; clearModeInput('TC'); }
+            tcRunning = true; tcStartTime = Date.now() - tcElapsedMs;
+            tcInterval = setInterval(() => { tcElapsedMs = Date.now() - tcStartTime; updateDisplay(); }, 100);
+            updateDisplay();
+        }
+
+        function stopTC() { tcRunning = false; if (tcInterval) clearInterval(tcInterval); }
+
+        function toggleSW() {
+            if (!swRunning) {
+                let swIn = inputs['SW'];
+                if (swIn.h || swIn.m || swIn.s) { swElapsedMs = getSecondsFromInput('SW') * 1000; clearModeInput('SW'); }
+                swRunning = true; swStartTime = Date.now() - swElapsedMs;
+                swInterval = setInterval(() => { swElapsedMs = Date.now() - swStartTime; updateDisplay(); }, 10);
+            } else { swRunning = false; clearInterval(swInterval); }
+            updateDisplay();
+        }
+
+        function updateDisplay() {     
+let totalTcSec = tcBaseSeconds + Math.floor(tcElapsedMs / 1000);
+
+    // ① まずリセット
+    mainDisplay.style.color = "";
+    tcDisplay.style.color = "";
+
+    tcDisplay.innerText = formatFullTime(totalTcSec);
+
+    // ② そのあと色付け
+    
+
+    mainDisplay.classList.remove('running-text');
+
+           if (currentMode === 'TC' && !tcRunning && (inputs['TC'].h || inputs['TC'].m || inputs['TC'].s)) {
+    tcDisplay.innerText = formatFullTime(getSecondsFromInput('TC'));
+    }
+if (currentMode === 'LARGE') {
+    const t = formatColonLargeSW(swElapsedMs);
+    const digits = largeMainTime.querySelectorAll('.digit');
+    const n = t.replace(/:/g,'');
+    for(let i=0; i<6; i++){ digits[i].innerText = n[i]; }
+
+    const separators = largeMainTime.querySelectorAll('.separator');
+
+    if (!swRunning) {
+        // 停止中 → 常に明るい
+        separators.forEach(s => {
+            s.style.opacity = '1';
+        });
+    } else {
+        // 秒内のミリ秒
+        const msInSec = swElapsedMs % 1000;
+
+        // 0〜500ms 明るい、それ以降は少し暗い
+        const bright = msInSec < 500;
+
+        //separators.forEach(s => {
+          //  s.style.opacity = bright ? '1' : '0.20';
+        //});
+       separators.forEach(s => {
+            // 💡 影を全部一旦リセットするよ（これが安全装置！）
+            s.style.textShadow = 'none';
+
+            if (!swRunning) {
+                // 【停止中】→ 影なし、普通の明るい赤
+                s.style.opacity = '1';
+            } else {
+                // 【走行中】
+                if (bright) {
+                    // 【明】→ 影あり、シャープなネオン
+                    s.style.opacity = '1';
+                   s.style.textShadow = '0 0 3px rgba(255, 0, 0, 0.6), 0 0 6px rgba(255, 0, 0, 0.3)';
+                } else {
+                    // 【暗】→ 影なし、少し暗く
+                    s.style.opacity = '0.20';
+                }
+            }
+        });
+``
+    }
+}
+
+            if (currentMode === 'SW') 
+{
+    if (swRunning) mainDisplay.classList.add('running-text');
+
+    if (!swRunning && (inputs['SW'].h || inputs['SW'].m || inputs['SW'].s)) {
+
+       const sec = getSecondsFromInput('SW');
+
+if (sec >= 3600) {
+    mainDisplay.innerText = formatInputToDisplay('SW');
+} else {
+    mainDisplay.innerText = formatInputToDisplay('SW') + '00';
+}
+
+    } else {
+        mainDisplay.innerText = formatSW(swElapsedMs);
+    }
+}
+ else if (currentMode === 'TC') {
+    mainDisplay.innerText = formatInputToDisplay('TC') || "0";
+
+    if (inputs['TC'].h || inputs['TC'].m || inputs['TC'].s) {
+        mainDisplay.style.color = "#C9A227";
+    }
+} else if (currentMode === 'CALC') {
+    if (!inputs['CALC'].h && !inputs['CALC'].m && !inputs['CALC'].s) {
+        mainDisplay.innerText = isWaitingNewInput ? formatTime(memorySeconds) : (isDetermined ? formatTime(memorySeconds) : "0");
+    } else {
+        mainDisplay.innerText = formatInputToDisplay('CALC');
+    }
+}
+
+
+        }
+
+       function pressNum(n) {
+    if ((currentMode === 'TC' && tcRunning) || (currentMode === 'SW' && swRunning) || currentMode === 'LARGE') return;
+
+    if (currentMode === 'CALC') {
+        if (isDetermined) { memorySeconds = 0; clearModeInput('CALC'); isDetermined = false; }
+        if (isWaitingNewInput) { clearModeInput('CALC'); isWaitingNewInput = false; }
+    }
+
+    let target = inputs[currentMode];
+if ((target.s || "").length >= 6) return;
+
+   if ((target.s || "") === "0") {
+    target.s = String(n);
+} else {
+    target.s = (target.s || "") + n;
+}
+           target.isSeqMode = target.s.length >= 3;
+
+    updateDisplay();
+}
+       function formatInputToDisplay(mode) {
+    let target = inputs[mode];
+    if (!target.h && !target.m && !target.s) return "";
+if (target.isSeqMode) {
+    let str = target.s;
+
+    let sec = str.slice(-2);
+    let min = str.slice(-4, -2);
+    let hr  = str.slice(0, -4);
+
+    let res = "";
+
+    if (hr) res += parseInt(hr) + ":";
+
+    if (min || hr) {
+        res += (min ? String(parseInt(min, 10)) : "0") + "'";
+    }
+
+   res += sec + '"';
+
+    return res;
+}
+    let res = "";
+
+    if (target.h) res += target.h + ":";
+
+    if (target.m || target.h)
+        res += (target.h ? (target.m ? target.m.padStart(2, '0') : "--") : (target.m || "-")) + "'";
+
+    res += (target.m || target.h
+        ? (target.s ? target.s.padStart(2, '0') : "--")
+        : (target.s || "-")) + '"';
+
+    return res;
+}
+
+
+        function formatFullTime(totalSec) {
+            let h = Math.floor(totalSec / 3600), m = Math.floor((totalSec % 3600) / 60), s = totalSec % 60;
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}'${String(s).padStart(2,'0')}"`;
+        }
+
+        function formatSW(ms) 
+{
+    let s = Math.floor(ms / 1000), dec = Math.floor((ms % 1000) / 10);
+    let h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+
+    if (h > 0) {
+        return h + ":" +
+               String(m).padStart(2,'0') + "'" +
+               String(sec).padStart(2,'0') + '"';
+    }
+
+    return (m > 0 ? m + "'" : "") +
+           String(sec).padStart(2,'0') + '"' +
+           String(dec).padStart(2,'0');
+}
+
+
+        function formatColonLargeSW(ms) {
+            let totalSec = Math.floor(ms / 1000);
+            let h = Math.floor(totalSec / 3600), m = Math.floor((totalSec % 3600) / 60), s = totalSec % 60;
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
+      function getSecondsFromInput(mode) {
+    let t = inputs[mode];
+
+    // 通常の単位入力がある場合はそのまま
+    if (t.h || t.m) {
+        return (parseInt(t.h || 0) * 3600)
+             + (parseInt(t.m || 0) * 60)
+             + parseInt(t.s || 0);
+    }
+
+    // ここが新ルール（ただの数字入力）
+    let str = t.s || "";
+
+    if (str === "") return 0;
+
+    // 後ろから切る
+    let sec = parseInt(str.slice(-2) || "0");
+    let min = parseInt(str.slice(-4, -2) || "0");
+    let hr  = parseInt(str.slice(0, -4) || "0");
+
+    return hr * 3600 + min * 60 + sec;
+}
+
+        function clearModeInput(mode) { inputs[mode] = { h: "", m: "", s: "" }; }
+
+        function setOp(op) {
+            if (currentMode !== 'CALC') return;
+            if (isWaitingNewInput) { currentOp = op; document.getElementById('op-sign').innerText = op; return; }
+if (isDetermined) {
+    currentOp = op;
+    isWaitingNewInput = true;
+    isDetermined = false;
+    document.getElementById('op-sign').innerText = op;
+    return;
+}
+            
+            let v = getSecondsFromInput('CALC');
+            if (currentOp === '+') memorySeconds += v; else if (currentOp === '-') memorySeconds -= v; else memorySeconds = v;
+            isDetermined = false; isWaitingNewInput = true; currentOp = op;
+            document.getElementById('op-sign').innerText = op; clearModeInput('CALC'); updateDisplay();
+        }
+
+        function calculate() {
+            if (currentMode !== 'CALC') return;
+            if (
+    isDetermined &&
+    !currentOp &&
+    !inputs['CALC'].h &&
+    !inputs['CALC'].m &&
+    !inputs['CALC'].s
+) {
+    return;
+}
+            let v = getSecondsFromInput('CALC');
+            if (currentOp === '+') memorySeconds += v; else if (currentOp === '-') memorySeconds -= v; else memorySeconds = v;
+            clearModeInput('CALC'); isDetermined = true; isWaitingNewInput = false; currentOp = null;
+            document.getElementById('op-sign').innerText = ""; updateDisplay();
+        }
+
+        function confirmUnit(unit) {
+    if ((currentMode === 'TC' && tcRunning) || (currentMode === 'SW' && swRunning) || currentMode === 'LARGE') return;
+
+    let target = inputs[currentMode];
+            if (target.isSeqMode) return;
+
+    if (unit === 'h') {
+        target.h = target.s || "0";
+        target.m = "";
+        target.s = "";
+    }
+
+    if (unit === 'm') {
+        target.m = target.s || "0";
+        target.s = "";
+    }
+if (unit === 's') {
+    // 時が入っていて分が未入力なら、自動で0分確定
+    if (target.h !== "" && target.m === "") {
+        target.m = "0";
+    }
+}
+    updateDisplay();
+
+    // ここから追加（正規化）
+    let h = parseInt(target.h || 0);
+    let m = parseInt(target.m || 0);
+    let s = parseInt(target.s || 0);
+let hadS = target.s !== "";
+    if (s >= 60) {
+        m += Math.floor(s / 60);
+        s = s % 60;
+    }
+
+    if (m >= 60) {
+        h += Math.floor(m / 60);
+        m = m % 60;
+    }
+
+    target.h = h ? String(h) : "";
+
+if (target.m !== "" || m > 0) {
+    target.m = String(m);
+} else {
+    target.m = "";
+}
+
+target.s = hadS ? String(s) : "";
+clearModeInput(currentMode);
+
+inputs[currentMode].h = target.h;
+inputs[currentMode].m = target.m;
+inputs[currentMode].s = target.s;
+    updateDisplay();
+}
+
+        function allClear() {
+            if (currentMode === 'CALC') { memorySeconds = 0; currentOp = null; isDetermined = false; isWaitingNewInput = false; document.getElementById('op-sign').innerText = ""; }
+            clearModeInput(currentMode); updateDisplay();
+        }
+
+        function selectUpperDisplay(target) {
+            if (currentMode === 'LARGE') return;
+            upperView = (upperView === target) ? 'none' : target;
+            document.getElementById('section-clock').classList.toggle('hidden', upperView !== 'clock');
+            document.getElementById('section-tc').classList.toggle('hidden', upperView !== 'tc');
+            document.getElementById('lcd-divider').classList.toggle('hidden', upperView === 'none');
+        }
+
+        function formatTime(ts) { 
+            let h = Math.floor(Math.abs(ts)/3600), s = Math.abs(ts)%60; 
+            let m_fixed = Math.floor((Math.abs(ts)%3600)/60);
+            return (ts<0?"-":"")+(h>0?h+":"+String(m_fixed).padStart(2,'0')+"'"+String(s).padStart(2,'0')+'"':(m_fixed>0?m_fixed+"'"+String(s).padStart(2,'0')+'"':s+'"')); 
+        }
+
+        function updateRealTime() {
+            const now = new Date();
+            document.getElementById('clock-val').innerText = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}'${String(now.getSeconds()).padStart(2,'0')}"`;
+        }
+        setInterval(updateRealTime, 1000);
+        updateRealTime();
+        // 📱 計算機コンソールを画面の90%に自動で収める関数
+        function autoScaleConsole() {
+            // 1. 計算機コンソール（.console）の元の最大幅（480px）と、大体の高さを設定
+            const baseWidth = 476;
+            const baseHeight = 840; // 液晶とボタンが並んだときのおおよその高さだよ
+
+            // 2. いまのスマホ画面の、マックスの「横幅」と「高さ」を測るよ
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            // 3. 画面の90%に収めたいから、ターゲットの大きさを計算！
+            const targetWidth = windowWidth * 0.99;
+            const targetHeight = windowHeight * 0.97;
+
+            // 4. 縦と横、どっちがどれくらいはみ出るかの倍率（スケール）を出すよ
+            const scaleX = targetWidth / baseWidth;
+            const scaleY = targetHeight / baseHeight;
+
+            // 5. 小さい方の倍率（より縮めないとはみ出ちゃう方）を自動で選ぶよ！
+            let finalScale = Math.min(scaleX, scaleY);
+
+            // ❗画面が大きすぎるときに巨大化しないよう、最大でも1倍（100%）でストップ！
+            finalScale = Math.min(finalScale, 1.0);
+
+            // 6. 計算機の固まり（normalConsole）に、計算した倍率をパッと適用するよ！
+            if (normalConsole) {
+                normalConsole.style.transform = `scale(${finalScale})`;
+            }
+        }
+
+        // ⏳ ページを読み込んだ時と、画面サイズが変わった時に、上の計算を自動で走らせるお守りだよ
+        window.addEventListener('load', autoScaleConsole);
+        window.addEventListener('resize', autoScaleConsole);
+
+// 🔄 巨大ストップウォッチ（90度回転）を画面に収めるあべこべ関数
+        function autoScaleLargeTimer() {
+            // 1. 大画面タイマー（#large-time-container）の元の「横幅」と「縦幅」の基準サイズ
+            // 💡 もしこれでも全体のサイズ感がズレる時は、この数値を上げ下げしてみてね！
+            const baseWidth = 800;  
+            const baseHeight = 450; 
+
+            // 2. いまのスマホ画面の「横幅」と「高さ」を測るよ
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            // 🌟【ここがあべこべ！】90度回っているから、画面の縦横を入れ替えて限界の壁を作ります！
+            // 🛠️ この「1.00」と「0.95」の数字を弄って、あなたの手でいい感じの縮尺に決めてね！
+            const targetWidth = windowHeight * 0.80; // タイマーの横幅は、スマホの「縦の長さ」にぶつかる！
+            const targetHeight = windowWidth * 0.95; // タイマーの縦幅は、スマホの「横の幅」にぶつかる！
+
+            // 3. 縦横比を崩さないための倍率計算
+            const scaleX = targetWidth / baseWidth;
+            const scaleY = targetHeight / baseHeight;
+
+            // 4. ガードマン（Math.min）が、キツい方の倍率を1つだけ自動で選ぶよ！
+            let finalScale = Math.min(scaleX, scaleY);
+
+            // ❗ 巨大化ストッパー（最大でも1倍で止める安全弁だよ）
+            finalScale = Math.min(finalScale, 1.0);
+
+            // 5. 大画面コンテナに倍率を適用するよ！
+            const largeContainer = document.getElementById('large-time-container');
+            if (largeContainer) {
+                largeContainer.style.transform = `translate(-50%, -50%) rotate(90deg) scale(${finalScale})`;
+            }
+        }
+
+        // ⏳ ページを読み込んだ時と、画面サイズが変わった時に、上のあべこべ計算を自動で走らせるよ
+        window.addEventListener('load', autoScaleLargeTimer);
+        window.addEventListener('resize', autoScaleLargeTimer);
+        setMode('CALC');
+
+        // WakeLock等周辺ロジック維持
+        let wakeLock = null;
+        const requestWakeLock = async () => { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} };
+        document.body.addEventListener('touchstart', () => { if (!wakeLock) requestWakeLock(); }, { passive: true });
+        document.body.addEventListener('mousedown', () => { if (!wakeLock) requestWakeLock(); });
+        document.addEventListener('visibilitychange', () => { if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock(); });
+        document.body.addEventListener('touchmove', function(e) { if (e.target === document.body || e.target.closest('.console') === null) e.preventDefault(); }, { passive: false });
+        window.addEventListener('scroll', function(e) { window.scrollTo(0, 0); });
+    </script>
+</body>
+</html>
