@@ -198,7 +198,7 @@ touch-action: manipulation;
         /* リセットした瞬間だけ:数字をミント色にする(光のにじみは、その一瞬だけ付ける) */
         #large-main-time svg.seg-mint .seg-digit .seg-h { fill: url(#sgHM); }
         #large-main-time svg.seg-mint .seg-digit .seg-v { fill: url(#sgVM); }
-        #large-main-time svg.seg-mint .seg-colon .seg-dot { fill: #3DBB86; }
+        #large-main-time svg.seg-mint .seg-colon .seg-dot { fill: url(#sgDM); }
         #large-main-time svg.seg-mint .seg-colon .seg-halo { fill: url(#sgRM); }
 
         #large-mode-title {
@@ -394,13 +394,18 @@ font-size: 2.2rem;
           const mint='<filter id="sgMint" filterUnits="userSpaceOnUse" x="-40" y="-40" width="150" height="180">'+
             '<feGaussianBlur in="SourceAlpha" stdDeviation="5" result="b1"/><feFlood flood-color="#3DBB86" flood-opacity=".6"/><feComposite in2="b1" operator="in" result="g1"/>'+
             '<feGaussianBlur in="SourceAlpha" stdDeviation="10" result="b2"/><feFlood flood-color="#3DBB86" flood-opacity=".3"/><feComposite in2="b2" operator="in" result="g2"/>'+
-            '<feMerge><feMergeNode in="g2"/><feMergeNode in="g1"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+            '<feMerge><feMergeNode in="g2"/><feMergeNode in="g1"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'+
+            '<filter id="sgMintC" x="-60%" y="-40%" width="220%" height="180%">'+
+            '<feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b1"/><feFlood flood-color="#3DBB86" flood-opacity=".7"/><feComposite in2="b1" operator="in" result="g1"/>'+
+            '<feMerge><feMergeNode in="g1"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
           /* sgHM / sgVM は、リセットの瞬間の数字の色(ミント)。赤と同じく、真ん中が明るく両端が少し暗い */
           svg.innerHTML='<defs>'+grad('sgH',0)+grad('sgV',1)+grad('sgHM',0,'#2fa673','#6fd3a8')+grad('sgVM',1,'#2fa673','#6fd3a8')+mint+
             '<radialGradient id="sgD" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="'+SEG.cHi+'"/><stop offset=".55" stop-color="'+SEG.cCol+'"/><stop offset="1" stop-color="'+SEG.cLo+'"/></radialGradient>'+
             '<radialGradient id="sgR"><stop offset="0" stop-color="'+SEG.cCol+'" stop-opacity="'+SEG.cHalo+'"/><stop offset=".45" stop-color="'+SEG.cCol+'" stop-opacity="'+(SEG.cHalo*.45)+'"/><stop offset="1" stop-color="'+SEG.cCol+'" stop-opacity="0"/></radialGradient>'+
+            /* sgDM は、リセットの瞬間のコロンの玉(ミント)。真ん中が白っぽく光り、ふちは深いミント */
+            '<radialGradient id="sgDM" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#e2fff2"/><stop offset=".35" stop-color="#8fe6be"/><stop offset=".75" stop-color="#3DBB86"/><stop offset="1" stop-color="#1f7f56"/></radialGradient>'+
             /* sgRM は、リセットの瞬間のコロンのにじみ(ミント色) */
-            '<radialGradient id="sgRM"><stop offset="0" stop-color="#3DBB86" stop-opacity="'+SEG.cHalo+'"/><stop offset=".45" stop-color="#3DBB86" stop-opacity="'+(SEG.cHalo*.45)+'"/><stop offset="1" stop-color="#3DBB86" stop-opacity="0"/></radialGradient></defs>';
+            '<radialGradient id="sgRM"><stop offset="0" stop-color="#3DBB86" stop-opacity="'+Math.min(1,SEG.cHalo*1.5)+'"/><stop offset=".45" stop-color="#3DBB86" stop-opacity="'+(Math.min(1,SEG.cHalo*1.5)*.45)+'"/><stop offset="1" stop-color="#3DBB86" stop-opacity="0"/></radialGradient></defs>';
           let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
           const groups=[];
           const digs=xs.map(x0=>{
@@ -429,6 +434,7 @@ font-size: 2.2rem;
             mint(on){
               svg.classList.toggle('seg-mint',on);
               groups.forEach(g=>{if(on)g.setAttribute('filter','url(#sgMint)');else g.removeAttribute('filter')});
+              cols.forEach(g=>{if(on)g.setAttribute('filter','url(#sgMintC)');else g.removeAttribute('filter')});
             }
           };
         }
